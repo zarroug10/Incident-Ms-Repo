@@ -30,7 +30,7 @@ exports.getIncidents = async (req, res) => {
         return res.status(401).json({ error: 'Invalid token' });
       }
 
-      pool.query('SELECT Incidents.*, Users.username FROM Incidents INNER JOIN Users ON Incidents.userId = Users.id', (error, results, fields) => {
+      pool.query('SELECT Incidents.*, Teams.name AS team_name, Users.username FROM Incidents INNER JOIN Teams ON Incidents.teamId = Teams.id INNER JOIN Users ON Incidents.userId = Users.id', (error, results, fields) => {
         if (error) {
           console.error('Error retrieving incidents:', error);
           return res.status(500).json({ error: 'An error occurred while retrieving incidents' });
@@ -226,7 +226,7 @@ exports.getLocationAnalytics = async (req, res) => {
               const incidentCount = incidentResults[0].incidentCount;
 
               // Calculate the percentage of incidents in this location compared to total incidents
-              const percentageOfTotal = (incidentCount / totalIncidentCount) * 100;
+              const percentageOfTotal = ((incidentCount / totalIncidentCount) * 100).toFixed(0);
 
               // Construct the location analytics object
               const locationData = {
@@ -270,7 +270,7 @@ exports.statusAnalytics = async (req, res) => {
       }
 
       // Retrieve overall status analytics from the database
-      pool.query('SELECT COUNT(*) AS total_incidents, SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END) AS total_resolved, SUM(CASE WHEN status = "in_progress" THEN 1 ELSE 0 END) AS total_in_progress FROM Incidents', (error, results, fields) => {
+      pool.query('SELECT COUNT(*) AS total_incidents, SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END) AS total_resolved, SUM(CASE WHEN status = "in_progress" THEN 1 ELSE 0 END) AS total_in_progress,SUM(CASE WHEN status = "assigned" THEN 1 ELSE 0 END) AS total_assigned,SUM(CASE WHEN status = "reported" THEN 1 ELSE 0 END) AS total_reported FROM Incidents', (error, results, fields) => {
         if (error) {
           console.error('Error retrieving overall status analytics:', error);
           return res.status(500).json({ error: 'An error occurred while retrieving overall status analytics' });
